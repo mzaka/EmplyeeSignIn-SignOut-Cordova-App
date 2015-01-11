@@ -1,0 +1,1237 @@
+﻿
+
+<!DOCTYPE HTML>
+<html>
+<head>
+
+    <title>Exercise 3</title>
+
+<meta name="viewport" content="width=device-width, 
+  initialscale=1.0, user-scalable=no"></meta>
+ 
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css">
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script> 
+  
+  <script src="js/fastclick.js"></script> 
+  <script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script> 
+  <link rel="stylesheet" href="css/themes/Zak.min.css" />
+<link rel="stylesheet" href="css/themes/jquery.mobile.icons.min.css" />
+<link rel="stylesheet" href="css/table.css" />
+<script src="LAB.js"></script>
+<script>
+//  Declare SQL Query for SQLite
+ 
+var createStatement = "CREATE TABLE IF NOT EXISTS ATTEND (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, userID TEXT, TimeIn TEXT, TimeOuT Text, comment TEXT, Date TEXT, Breakin Text, BreakOut Text)";
+ 
+var selectAllStatement = "SELECT * FROM ATTEND";
+ 
+var insertStatement = "INSERT INTO ATTEND (username, userID,  TimeIn, comment, Date) VALUES (?, ?, time('now','localtime'), ?, date('now'))";
+ 
+var updateStatement = "UPDATE ATTEND SET TimeOuT = time('now','localtime'), comment = ? WHERE userID=? AND TimeOuT IS NULL";
+
+var breakin = "UPDATE ATTEND SET Breakin = time('now','localtime'), comment = ? WHERE userID=? AND TimeOut IS NULL "; 
+
+var breakout = "UPDATE ATTEND SET BreakOut = time('now','localtime') WHERE userID=? AND BreakOut IS  NULL  "; 
+ 
+var deleteStatement = "DELETE FROM ATTEND WHERE id=?";
+ 
+var dropStatement = "DROP TABLE ATTEND";
+
+var signedin = "SELECT * FROM ATTEND where TimeOuT Is NULL";
+
+//var alter = "ALTER TABLE ATTEND ADD COLUMN BreakOut TEXT;";
+
+
+ 
+ var db = openDatabase("AddressBook", "1.0", "Address Book", 200000);  // Open SQLite Database
+ 
+var dataset;
+ 
+var DataType;
+ 
+ function initDatabase()  // Function Call When Page is ready.
+ 
+{
+ 
+    try {
+ 
+        if (!window.openDatabase)  // Check browser is supported SQLite or not.
+ 
+        {
+ 
+            alert('Databases are not supported in this browser.');
+ 
+        }
+ 
+        else {
+ 
+            createTable();  // If supported then call Function for create table in SQLite
+ 
+        }
+ 
+    }
+ 
+    catch (e) {
+ 
+        if (e == 2) {
+ 
+            // Version number mismatch. 
+ 
+            console.log("Invalid database version.");
+ 
+        } else {
+ 
+            console.log("Unknown error " + e + ".");
+ 
+        }
+ 
+        return;
+ 
+    }
+ 
+}
+ 
+function createTable()  // Function for Create Table in SQLite.
+ 
+{
+ 
+    db.transaction(function (tx) { tx.executeSql(createStatement, [], showRecords, onError); tx.executeSql(createStatement, [], showRecords1, onError); tx.executeSql(createStatement, [], showRecords2, onError);
+	tx.executeSql(createStatement, [], showRecords3, onError);
+	tx.executeSql(createStatement, [], showRecords4, onError);
+	tx.executeSql(createStatement, [], TotTime, onError);
+	tx.executeSql(createStatement, [], showDate, onError);
+	tx.executeSql(createStatement, [], breakTime, onError);
+	
+	});
+ 
+}
+ 
+function insertRecord() // Get value from Input and insert record . Function Call when Save/Submit Button Click..
+ 
+{
+ 
+        var usernametemp = $('input:text[id=username]').val();
+ 
+        var useremailtemp = $('input:text[id=useremail]').val();
+		
+		var usercmttemp = $('input:text[id=cmt]').val();
+		
+		
+        db.transaction(function (tx) { tx.executeSql(insertStatement, [usernametemp, useremailtemp, usercmttemp], loadAndReset, onError); });
+ 
+        //tx.executeSql(SQL Query Statement,[ Parameters ] , Sucess Result Handler Function, Error Result Handler Function );
+	var waqt = new Date()
+	waqt.getTime();
+	console.log(waqt);
+	
+	
+alert("Signed in At"+" \n"+ waqt); 
+
+
+
+}
+ 
+function deleteRecord(id) // Get id of record . Function Call when Delete Button Click..
+ 
+{
+ 
+    var iddelete = id.toString();
+ 
+    db.transaction(function (tx) { tx.executeSql(deleteStatement, [id], showRecords,showRecords1, onError); alert("Delete Sucessfully"); });
+ 
+    resetForm();
+ 
+}
+ 
+function updateRecord() // Get id of record . Function Call when Delete Button Click..
+ 
+{
+ 
+   // var usernameupdate = $('input:text[id=username]').val().toString();
+ 
+   // var useremailupdate = $('input:text[id=useremail]').val().toString();
+   //var timeOut = $(this).val(datetime('now'))
+ 
+    var useridupdate = $("#useremail").val();
+	var cmtupdate = $('input:text[id=cmt]').val().toString();
+	var waqt = new Date()
+	waqt.getTime();
+	console.log(waqt);
+alert("Signed Out At"+" /n"+ waqt); 
+    db.transaction(function (tx) { tx.executeSql(updateStatement, [cmtupdate, useridupdate], loadAndReset, onError); });
+
+
+
+
+
+ 
+}
+function breakgo()
+{
+	var useridupdate = $("#useremail").val();
+	var cmtupdate = $('input:text[id=cmt]').val().toString();
+	var waqt = new Date()
+	waqt.getTime();
+	console.log(waqt);
+alert("Break Begin at"+" /n"+ waqt); 
+    db.transaction(function (tx) { tx.executeSql(breakin, [cmtupdate , useridupdate], loadAndReset, onError); });
+
+}
+
+function breakfn()
+{
+	var useridupdate = $("#useremail").val();
+	//var cmtupdate = $('input:text[id=cmt]').val().toString();
+	var waqt = new Date()
+	waqt.getTime();
+	console.log(waqt);
+alert("Break Finished at"+" /n"+ waqt); 
+    db.transaction(function (tx) { tx.executeSql(breakout, [useridupdate], loadAndReset, onError); });
+
+}
+ 
+ 
+function dropTable() // Function Call when Drop Button Click.. Talbe will be dropped from database.
+ 
+{
+ 
+    db.transaction(function (tx) { tx.executeSql(dropStatement, [], showRecords, onError); });
+ 
+    resetForm();
+ 
+    initDatabase();
+ 
+}
+ 
+function loadRecord(i) // Function for display records which are retrived from database.
+ 
+{
+ 
+    var item = dataset.item(i);
+ 
+    $("#username").val((item['username']).toString());
+ 
+    $("#useremail").val((item['userID']).toString());
+	
+
+ 
+    $("#id").val((item['id']).toString());
+ 
+}
+ 
+function resetForm() // Function for reset form input values.
+ 
+{
+ 
+    $("#username").val("");
+ 
+    $("#useremail").val("");
+ 
+    $("#id").val("");
+	
+	$("#cmt").val("");
+ 
+}
+ 
+function loadAndReset() //Function for Load and Reset...
+ 
+{
+ 
+    resetForm();
+ 
+    showRecords();
+	 showRecords1();
+	 showRecords2();
+	 showRecords3();
+	 showRecords4();
+	 showDate();
+ 
+}
+ 
+function onError(tx, error) // Function for Hendeling Error...
+ 
+{
+ 
+    alert(error.message);
+ 
+}
+ 
+function showRecords() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#results").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete = '<li>' +    + item['userID'] + '<hr>';
+ 
+                $("#results").append(linkeditdelete);
+ 
+            }
+			
+			
+ 
+        });
+ 
+    });
+ 
+}
+function showRecords() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#results").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete = '<li>' +    + item['userID'] + '<hr>';
+ 
+                $("#results").append(linkeditdelete);
+ 
+            }
+			
+			
+ 
+        });
+ 
+    });
+ 
+}
+function showDate() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#date").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete = '<li>'     + item['Date'] + '<hr>';
+ 				console.log(linkeditdelete);
+                $("#date").append(linkeditdelete);
+ 
+            }
+			
+			
+ 
+        });
+ 
+    });
+ 
+}
+
+
+function showRecords1() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#results1").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete =    item['username'] +'<hr>';
+ 
+                $("#results1").append(linkeditdelete);
+				
+            }
+			
+        });
+ 
+    });
+ 
+}
+
+function showRecords2() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#results2").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result2) {
+ 
+            dataset = result2.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete =   item['comment'] +'<hr>';
+ 
+                $("#results2").append(linkeditdelete);
+ 
+            }
+			
+        });
+ 
+    });
+ 
+}
+
+function showRecords3() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#results3").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete =     item['TimeIn'] +'<hr>';
+ 
+                $("#results3").append(linkeditdelete);
+				//$("#results3").text(linkeditdelete);
+ 
+ 
+            }
+			
+        });
+ 
+    });
+ 
+}
+function showRecords4() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+    $("#results4").html('')
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var linkeditdelete =     item['TimeOuT'] +'<hr>';
+ 
+                $("#results4").append(linkeditdelete);
+ 
+            }
+			
+        });
+ 
+    });
+ 
+}
+//var lol = "lol";
+
+function TotTime() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+  //  $("#TimeCal").html('')
+ 
+   db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+
+             	var linkeditdelete =    item['TimeOuT']+'<hr>';
+				console.log(linkeditdelete);
+				var linkeditdelete1 =  item['TimeIn']+'<hr>';
+			
+				
+	var start = linkeditdelete1; 
+	console.log(linkeditdelete1);
+var end = linkeditdelete;
+console.log(linkeditdelete);
+	
+	
+    start = start.split(":");
+    end = end.split(":");
+    var startDate = new Date(0, 0, 0, start[0], start[1], 0);
+    var endDate = new Date(0, 0, 0, end[0], end[1], 0);
+    var diff = endDate.getTime() - startDate.getTime();
+    var hours = Math.floor(diff / 1000 / 60 / 60);
+    diff -= hours * 1000 * 60 * 60;
+    var minutes = Math.floor(diff / 1000 / 60);
+    
+//    console.log(hours < 9 ? "0" : "") + hours + ":" + (minutes < 9 ? "0" : "") + minutes ;
+ $("#result5").append((hours < 9 ? "0" : "") + hours + ":" + (minutes < 9 ? "0" : "") + minutes+'<hr>');
+				
+				
+				
+				
+				
+				
+				
+				
+				
+ 				//var showTime = linkeditdelete.getTime() -linkeditdelete1.getTime();
+                //$("#TimeCal").append(showTime);
+				//alert(( new  Date(linkeditdelete) - new Date(linkeditdelete1) ) / 1000 / 60 / 60 );
+            
+		  }
+       });
+ 
+   });
+ 
+}
+function breakTime() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+  //  $("#TimeCal").html('')
+ 
+   db.transaction(function (tx) {
+ 
+        tx.executeSql(selectAllStatement, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+
+             	var strt =    item['Breakin']+'<hr>';
+				console.log(strt);
+				var endd =  item['BreakOut']+'<hr>';
+			
+				
+	var start = strt; 
+	console.log(strt);
+var end = endd;
+console.log(endd);
+	
+	
+    start = start.split(":");
+    end = end.split(":");
+    var startDate = new Date(0, 0, 0, start[0], start[1], 0);
+    var endDate = new Date(0, 0, 0, end[0], end[1], 0);
+    var diff = endDate.getTime() - startDate.getTime();
+    var hours = Math.floor(diff / 1000 / 60 / 60);
+    diff -= hours * 1000 * 60 * 60;
+    var minutes = Math.floor(diff / 1000 / 60);
+    
+//    console.log(hours < 9 ? "0" : "") + hours + ":" + (minutes < 9 ? "0" : "") + minutes ;
+ $("#result6").append((hours < 9 ? "0" : "") + hours + ":" + (minutes < 9 ? "0" : "") + minutes+'<hr>');
+				
+				
+				
+				
+				
+				
+				
+				
+				
+ 				//var showTime = linkeditdelete.getTime() -linkeditdelete1.getTime();
+                //$("#TimeCal").append(showTime);
+				//alert(( new  Date(linkeditdelete) - new Date(linkeditdelete1) ) / 1000 / 60 / 60 );
+            
+		  }
+       });
+ 
+   });
+ 
+}
+
+
+
+
+
+/*function diff(start, end) {
+	var start = window.linkeditdelete; 
+	console.log(window.linkeditdelete);
+var end = document.getElementById("end").value;
+	
+	
+    start = start.split(":");
+    end = end.split(":");
+    var startDate = new Date(0, 0, 0, start[0], start[1], 0);
+    var endDate = new Date(0, 0, 0, end[0], end[1], 0);
+    var diff = endDate.getTime() - startDate.getTime();
+    var hours = Math.floor(diff / 1000 / 60 / 60);
+    diff -= hours * 1000 * 60 * 60;
+    var minutes = Math.floor(diff / 1000 / 60);
+    
+    return (hours < 9 ? "0" : "") + hours + ":" + (minutes < 9 ? "0" : "") + minutes;
+}
+*/
+
+function updatetable(){
+	 db.transaction(function (tx) { tx.executeSql(alter, [], showRecords, onError); });
+	
+}
+ 
+$(document).ready(function () // Call function when page is ready for load..
+ 
+{
+FastClick.attach(document.body);
+ 	$("html").ready(function(e) {
+		/*showRecords();
+        showRecords1();
+		showRecords2();*/
+    });
+   // $("body").fadeIn(2000); // Fede In Effect when Page Load..
+ 
+    initDatabase();
+//$("#submitButton").click(insertRecord);
+ 	//$("#submitButton").click(validateForm);
+	//$("#submitButton").click(validateForm1);
+	//$("#submitButton").click(validateForm2);
+   // $("#submitButton").click(insertRecord);  // Register Event Listener when button click.
+ 
+ //  $("#btnUpdate").click(updateRecord);
+ 
+    $("#btnReset").click(resetForm);
+ 
+    $("#btnDrop").click(updatetable);
+	$("#drop").click(dropTable);
+	$("#breakin").click(breakgo); 
+	$("#breakfn").click(breakfn); 
+	$(document).ready(function(e) {
+        signin();
+    });
+	//$("#alter").click(updatetable);
+	function page1(){
+		window.location = window.location + '#page1';
+        location.reload();
+	};
+	
+ 
+});
+
+$(function() {
+    FastClick.attach(document.body);
+});
+ </script>
+  <script>
+  function r1(){
+  {
+  
+        window.location = window.location + '#page3';
+        location.reload();
+    
+		}
+  }
+function validateForm() {
+    var x = document.forms["mycontact"]["username"].value;
+	var y = document.forms["mycontact"]["useremail"].value;
+	var z = document.forms["mycontact"]["cmt"].value;
+    if (x == null || x == "" ) {
+        alert ("Enter Your Name");
+       // return false;
+    }
+	else if( y == null || y == "")
+	{
+		alert("enter Something id");
+		//return false;
+	}
+	else if( z == null || z == "")
+	{
+		alert("enter Something a Comment");
+		//return false;
+	}
+	else
+	{
+		 //$("body").fadeIn(2000); // Fede In Effect when Page Load..
+ 
+   
+//$("#submitButton").click(insertRecord);
+insertRecord();
+page1();
+
+	}
+}
+
+function validateForm1() {
+    var x = document.forms["mycontact"]["username"].value;
+	var y = document.forms["mycontact"]["useremail"].value;
+	var z = document.forms["mycontact"]["cmt"].value;
+    if (x == null || x == "" ) {
+        alert ("Enter Your Name");
+       // return false;
+    }
+	else if( y == null || y == "")
+	{
+		alert("enter Something id");
+		//return false;
+	}
+	else if( z == null || z == "")
+	{
+		alert("enter Something a Comment");
+		//return false;
+	}
+	else
+	{
+		 //$("body").fadeIn(2000); // Fede In Effect when Page Load..
+ 
+   
+//$("#submitButton").click(insertRecord);
+updateRecord();
+	}
+	
+	
+}
+
+
+/*function validateForm1() {
+    var x = document.forms["mycontact"]["useremail"].value;
+    if (x != null || x != ""  ) {
+        $("#submitButton").click(insertRecord);
+        return true;
+    }
+	else 
+	{
+		alert("enter Something ID");
+	}
+}
+
+function validateForm2() {
+    var x = document.forms["mycontact"]["cmt"].value;
+    if (x == null || x == ""  ) {
+        alert("enter Something");
+        return false;
+    }
+	
+}*/
+
+  </script>
+  
+  <script>
+  /*$obj->send_email();
+
+    $rep->send_email(
+	table=>$table,
+	where=>\%where,
+	not_where=>\%not_where,
+	subject=>'My Mail',
+	email_col=>$email_col,
+	email_address=>\@addresses,
+	mailer=>$mailer,
+	sort_by=>\@sort_by,
+	sort_reversed=>\%sort_reversed,
+	show=>\@show,
+	limit=>$limit,
+	page=>$page,
+	row_template=>$row_template,
+    ); */
+	function signin() // Function For Retrive data from Database Display records as list
+ 
+{
+ 
+   
+ 
+    db.transaction(function (tx) {
+ 
+        tx.executeSql(signedin, [], function (tx, result) {
+ 
+            dataset = result.rows;
+ 
+            for (var i = 0, item = null; i < dataset.length; i++) {
+ 
+                item = dataset.item(i);
+ 
+                var sign =     item['username'] +'<hr>';
+ 
+                $("#signin").append(sign);
+ 
+            }
+			
+        });
+ 
+    });
+ 
+}
+	
+  </script>
+  <script type="text/javascript" charset="utf-8" src="js/index.js">
+
+	  </script>
+  <script src="js/html2canvas.js"></script>
+<script src="js/email_composer.js">
+</script>
+<script src="js/EmailComposer.js"></script>
+
+
+<script>
+/*function onLoad() {
+    document.addEventListener("deviceready", onDeviceReady, false);
+}
+function onDeviceReady() {
+alert('Device Ready');
+}*/
+/*function takeval(){
+	var  val1 =  "haha,";
+	var uri_enc = encodeURIComponent(val1);
+	var uri_dec = decodeURIComponent(uri_enc);
+	console.log(uri_dec);
+	/*for (var i = 0; i < val1.length; i++) {
+    //(myStringArray[i]);
+	$( "textarea#tx").append( decodeURI(val1[i] +' \n ')) ;
+	console.log(val1[i]);
+	
+	}*/
+	/*var uri = Array ($("#results").text(),'\n');
+var uri_enc = encodeURIComponent(uri);
+var uri_dec = decodeURIComponent(uri_enc);
+console.log(uri_dec);
+$( "textarea#tx").append(uri_dec);*/
+function doEmail() {
+    window.plugins.emailComposer.showEmailComposer("Subject","PlainTextBody", "recipient,recipient", "ccRecipient", "bccRecipient",false);
+
+}
+</script>
+
+
+    </head>
+
+    <body>
+    
+
+
+<div data-role="page" id="page1" Data-theme="b" style="background:url(img/1685510.jpg) no-repeat center center fixed;
+-webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;"  >	
+    <div data-role="header" id="h1"  data-fullscreen="true" >
+    	<p align="center">Staff Attendance Application 
+        </p>
+        	
+    </div>
+    <div data-role="main"  class="ui-content">
+   <div data-role="controlgroup" data-type="vertical"><br>
+
+      <a href="#page2" class="ui-btn" data-transition="slide" >Sign In / Sign Out</a>
+      <button id="newbtn" onClick="r1();" value="Attend">Attendence Sheet </button>
+      <a href="#page4" class="ui-btn" data-transition="pop"  >Help</a>
+  
+     
+       
+      
+</div>
+<br>
+
+<br>
+
+<div data-role="collapsible" onClick="signin();">
+  <h5> Signed In employees </h5>
+  <div id="signin"></div>
+ 
+  
+  </div>
+    </div>
+    <div data-role="footer" data-position="fixed">
+   
+<p align="center"> Attendence </p>
+    </div>
+</div>
+
+<div data-role="page" id="page2" data-position="fixed" Data-theme="b">	
+    <div data-role="header" id="h1">
+<a href="#page1" class="ui-btn ui-icon-home ui-btn-icon-left">Home</a>
+<h1>Registration FORM</h1>
+</div>
+    <div data-role="main" class="ui-content">
+     	
+ 
+              <form id="mycontact" method="post" action="">
+ 
+                     <fieldset>
+ 
+                           <legend>Your details</legend>
+ 
+                           <ol>
+ 
+                                  <li>
+ 
+                                         <label for="username" >Name</label>
+ 
+                                         <input id="username" type="text" placeholder="ENTER NAME"  required  />
+ 
+                        <input type="hidden" id="id"/>
+ 
+                                  </li>
+ 
+                                  <li>
+ 
+                                         <label for="useremail1">ID</label>
+ 
+                                         <input id="useremail" type="text" placeholder="Enter Your Unique ID Number"  required />
+                                         
+ 
+                                  </li>
+                                  <li>
+                                  <label for="cmt">Comment</label>
+                                  <input id="cmt" placeholder="Add a Comment"  required> 
+                                 
+                                  </li>
+                                  
+</form>
+ 
+                           </ol>
+ 
+                    
+                    
+ 
+                
+ 
+                     <button id="submitButton" type="submit" onClick="validateForm();">Sign In</button>
+
+
+<button id="btnUpdate" type=submit onClick="validateForm1();">Sign Out</button>
+
+
+<button id="breakin" type=submit onClick="">Begin Break</button>
+
+ 
+<button id="breakfn" type=submit onClick="">End Break</button> 			
+
+                </fieldset>
+ 
+              </form><br />
+ 
+       
+       
+  
+
+	
+
+
+    </div>
+    <div data-role="footer" data-position="fixed">
+    <p align="center"> Attendance  </p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+<div data-role="page" id="page3" data-position="fixed" Data-theme="b">	
+<link rel="stylesheet" href="css/table.css" />
+    <div data-role="header" id="h1" data-position="fixed">
+
+<a href="#page2" class="ui-btn ui-icon-arrow-l ui-btn-icon-left">Back</a>
+<a href="#page1" class="ui-btn ui-icon-home ui-btn-icon-right">Home</a>
+    	<p align="center">Attendence</p>	
+    </div>
+    <div data-role="main" class="ui-content CSSTableGenerator"   >
+ <div data-role="collapsible" >
+ <h5> Attendence Sheet </h5>
+    
+ 
+               <table border="1" align="center" id="print">
+               <tr>
+               <th>Date</th>
+               <th>ID</th>
+               <th>Name</th>
+               <th>Comment </th>
+               <th>Sign IN </th>
+               <th>Sign Out </th>
+               <th>Total Time Worked </th>
+               <th>Total Break Time </th>
+               </tr>
+               <tr>
+               <td>
+                 <div id="date" align="center">
+        
+      
+        
+        </div>
+               </td>
+               <td>
+ 
+        <div id="results" align="center" >
+        
+      
+        
+        </div>
+        </td>
+        <td>
+ 
+        <div id="results1" align="center">
+        
+        
+        
+        </div>
+        </td>
+        <td>
+ 
+        <div id="results2" align="center">
+        
+        
+        
+        </div>
+        </td>
+        
+        <td>
+ 
+        <div id="results3" align="center">
+        
+        
+        
+        </div>
+        </td>
+        
+        <td>
+ 
+        <div id="results4" align="center" >
+        
+        <p>B</p>
+        
+        </div>
+        </td>
+        
+        <td>
+ 
+        <div id="result5" align="center"  >
+       
+        
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js" type="text/javascript">
+        
+ 
+ 
+
+
+  
+
+        
+        </script> 
+
+         
+        
+        
+        </div>
+        
+        
+        
+        </td>
+        <td>
+        <div id="result6"></div>
+        </td>
+        
+        </tr>
+        </table>
+         </div>
+        <button id="drop" type="submit" >Delete All Records </button>
+       <button id="clk1"  onClick="">Save Record</button>
+   
+        
+    </div>
+     <div>
+  
+
+</div>
+<div style="width:800px;height:600px;" id="myDiv"> 
+
+
+
+ <style>
+    canvas{border:1px solid #222}
+    </style>
+   
+	
+    <script type="text/javascript" charset="utf-8" >
+        $("#clk2").click(function(){
+		
+    window.plugins.email.open(
+        {
+            subject: 'Display at image'
+        },
+        function () {
+            alert('email view dismissed');
+        },
+        this
+    );
+});
+		
+	    </script>
+	<script>
+	//function wow(){
+ /*   var canvas = document.getElementById("can");
+window.savephotoplugin(canvas,"image/png",device.version,function(val){ 
+  //returns you the saved path in val	
+		alert("Photo Saved: " + val);	
+});
+	};*/
+    
+ 
+ 
+ $("#clk1").click(function(){
+             html2canvas( [ document.getElementById("print") ], {
+          onrendered: function(canvas) {
+           // document.body.appendChild(canvas);
+		     var img = canvas.toDataURL()
+	 document.body.appendChild(canvas);
+   // window.open((img));
+	var mywindow = window.open(img,"Zaka",'height=640,width=800');
+//	mywindow.document.writeln("<p>This is 'myWindow'</p>");
+	//var adding = document.getElementById("can");
+	//$("#can").append(img);
+	
+/*	var mydiv = document.getElementById("can");
+var aTag = document.createElement('a');
+aTag.setAttribute('href',img);
+aTag.innerHTML = "link text";
+mydiv.appendChild(aTag);*/
+		  }
+		  
+		   
+	
+});
+       
+ });
+ 
+ 
+ 
+   //$("#clk").click(function(){
+	 
+/*window.plugins.emailComposer ({
+    to:      ['max.mustermann@appplant.de'],
+    cc:      ['erika.mustermann@appplant.de'],
+    bcc:     ['john.doe@appplant.com', 'jane.doe@appplant.com'],
+    subject: 'Greetings',
+    body:    'How are you? Nice greetings from Leipzig'
+});*/
+ //window.plugins.emailComposer.showEmailComposer("Test","Test","te...@gmail.com","","",true,"")
+//console.log("hahahahaha");
+ //  });
+</script>
+</div>
+<div  >
+</div>
+<style>
+    canvas{border:0px solid #222}
+    </style>
+<canvas id="can">
+
+
+</canvas>
+    
+    <div data-role="footer" data-position="fixed">
+    
+    <p align="center"> </p>
+    
+    </div>
+    </div>
+</div>
+
+<div data-role="page" id="page4" data-position="fixed" Data-theme="b" >	
+
+
+    <div data-role="header" id="h1" data-position="fixed">
+
+<a href="#page3" class="ui-btn ui-icon-arrow-l ui-btn-icon-left">Back</a>
+<a href="#page1" class="ui-btn ui-icon-home ui-btn-icon-right">Home</a>
+    	<p align="center">Help</p>	
+    </div>
+    <div data-role="main" class="ui-content">
+    
+    
+ 
+               
+ 
+        <p>Under Construction</p>
+ 
+    </div>
+    <div data-role="footer" data-position="fixed">
+    <p align="center">  </p>
+    </div>
+    </div>
+    
+<div data-role="page" id="page5" data-position="fixed"  >	
+
+
+    <div data-role="header" id="h1" data-position="fixed">
+
+<a href="#page4" class="ui-btn ui-icon-arrow-l ui-btn-icon-left">Back</a>
+<a href="#page1" class="ui-btn ui-icon-home ui-btn-icon-right">Home</a>
+    	<p align="center">Contact Us</p>	
+    </div>
+     <div data-role="main" class="ui-content">
+    <h2>Contact Us</h2>
+    
+       <div data-role="collapsible">
+  <h1> Event Info </h1>
+  <p>Email: info@XYZ.com</p><br>
+    <p>Phone: 12345678 </p>
+  
+  </div>
+    
+      
+      
+      </li>
+            <li><div data-role="collapsible">
+  <h1> Tickets Sales </h1>
+  <p>Email: Sales@XYZ.com</p><br>
+  <p>Phone: 12345678 </p>
+  
+  </div></li>
+      
+     
+      
+     
+
+    </ul>
+    </div>
+    </div>
+    
+  </div>
+</div>
+
+
+
+    </body>
+</html>
+
+    
+
+
+
